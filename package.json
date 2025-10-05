@@ -1,0 +1,28 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "API para solicitudes de justificantes",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "author": "Uriel Roa Campos",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.12.2",
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "mysql2": "^3.15.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Vrielnt/justificantes.git"
+  },
+  "keywords": [],
+  "bugs": {
+    "url": "https://github.com/Vrielnt/justificantes/issues"
+  },
+  "homepage": "https://github.com/Vrielnt/justificantes#readme"
+}
