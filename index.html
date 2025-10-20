@@ -13,6 +13,8 @@
       --primary-light: #4895ef;
       --secondary: #3f37c9;
       --success: #4cc9f0;
+      --warning: #f8961e;
+      --danger: #e63946;
       --dark: #2b2d42;
       --light: #f8f9fa;
       --gray: #adb5bd;
@@ -193,6 +195,43 @@
       box-shadow: none;
     }
 
+    .btn-success {
+      background: var(--success);
+      box-shadow: 0 4px 15px rgba(76, 201, 240, 0.3);
+    }
+
+    .btn-success:hover {
+      background: #3a9fc9;
+    }
+
+    .btn-warning {
+      background: var(--warning);
+      box-shadow: 0 4px 15px rgba(248, 150, 30, 0.3);
+    }
+
+    .btn-warning:hover {
+      background: #d67c0e;
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      box-shadow: 0 4px 15px rgba(230, 57, 70, 0.3);
+    }
+
+    .btn-danger:hover {
+      background: #c1121f;
+    }
+
+    .btn-sm {
+      padding: 8px 16px;
+      font-size: 0.85rem;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 8px;
+    }
+
     .result-card {
       background: white;
       border-radius: var(--radius);
@@ -233,7 +272,7 @@
     }
 
     .result-error {
-      border-left-color: #e63946;
+      border-left-color: var(--danger);
     }
 
     .table-container {
@@ -324,6 +363,11 @@
       color: var(--primary);
     }
 
+    .status-rejected {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
     .loading {
       display: inline-block;
       width: 20px;
@@ -336,6 +380,67 @@
 
     @keyframes spin {
       to { transform: rotate(360deg); }
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .modal.show {
+      display: flex;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 30px;
+      width: 90%;
+      max-width: 500px;
+      animation: fadeInUp 0.3s ease;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .modal-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--dark);
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--gray);
+      transition: var(--transition);
+    }
+
+    .close-btn:hover {
+      color: var(--dark);
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 20px;
     }
 
     footer {
@@ -396,6 +501,10 @@
         padding: 12px 8px;
         font-size: 0.9rem;
       }
+
+      .action-buttons {
+        flex-direction: column;
+      }
     }
   </style>
 </head>
@@ -416,6 +525,7 @@
           Registrar Nuevo Justificante
         </h2>
         <form id="form">
+          <input type="hidden" id="id" name="id">
           <div class="form-grid">
             <div class="form-group">
               <label for="nombre">Nombre Completo</label>
@@ -442,19 +552,35 @@
             </div>
           </div>
           
-          <div class="form-group">
-            <label for="fecha_ausencia">Fecha de Ausencia</label>
-            <div class="input-with-icon">
-              <i class="fas fa-calendar-alt"></i>
-              <input type="date" id="fecha_ausencia" name="fecha_ausencia" required>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="fecha_ausencia">Fecha de Ausencia</label>
+              <div class="input-with-icon">
+                <i class="fas fa-calendar-alt"></i>
+                <input type="date" id="fecha_ausencia" name="fecha_ausencia" required>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="estado">Estado</label>
+              <div class="input-with-icon">
+                <i class="fas fa-tag"></i>
+                <select id="estado" name="estado">
+                  <option value="pendiente">Pendiente</option>
+                  <option value="aprobado">Aprobado</option>
+                  <option value="rechazado">Rechazado</option>
+                </select>
+              </div>
             </div>
           </div>
           
-          <button type="submit" class="btn btn-full" id="submit-btn">
-            <i class="fas fa-paper-plane"></i>
-            <span id="btn-text">Enviar Justificante</span>
-            <div class="loading" id="btn-loading" style="display: none;"></div>
-          </button>
+          <div class="form-group">
+            <button type="submit" class="btn btn-full" id="submit-btn">
+              <i class="fas fa-paper-plane"></i>
+              <span id="btn-text">Enviar Justificante</span>
+              <div class="loading" id="btn-loading" style="display: none;"></div>
+            </button>
+          </div>
         </form>
       </section>
 
@@ -480,12 +606,13 @@
                 <th>Grupo</th>
                 <th>Motivo</th>
                 <th>Fecha de Ausencia</th>
-                <th>Fecha de Solicitud</th>
+                <th>Estado</th>
+                <th>Acciones</th>
               </tr>
             </thead>
             <tbody id="tabla-body">
               <tr>
-                <td colspan="6" class="empty-state">
+                <td colspan="7" class="empty-state">
                   <i class="fas fa-inbox"></i>
                   <p>No hay solicitudes registradas</p>
                 </td>
@@ -495,6 +622,21 @@
         </div>
       </section>
     </main>
+
+    <!-- Modal de confirmación para eliminar -->
+    <div class="modal" id="delete-modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 class="modal-title">Confirmar Eliminación</h3>
+          <button class="close-btn" id="close-delete-modal">&times;</button>
+        </div>
+        <p>¿Estás seguro de que deseas eliminar esta solicitud? Esta acción no se puede deshacer.</p>
+        <div class="modal-footer">
+          <button class="btn" id="cancel-delete">Cancelar</button>
+          <button class="btn btn-danger" id="confirm-delete">Eliminar</button>
+        </div>
+      </div>
+    </div>
 
     <footer>
       <p>Sistema de Justificantes &copy; 2023 - Todos los derechos reservados</p>
@@ -512,6 +654,15 @@
     const submitBtn = document.getElementById('submit-btn');
     const btnText = document.getElementById('btn-text');
     const btnLoading = document.getElementById('btn-loading');
+    const deleteModal = document.getElementById('delete-modal');
+    const closeDeleteModal = document.getElementById('close-delete-modal');
+    const cancelDelete = document.getElementById('cancel-delete');
+    const confirmDelete = document.getElementById('confirm-delete');
+
+    // Variables globales
+    let solicitudes = [];
+    let solicitudAEliminar = null;
+    let modoEdicion = false;
 
     // URL base de la API - cambiar según sea necesario
     const API_BASE = 'http://localhost:3000';
@@ -553,15 +704,39 @@
       }
     }
 
+    // Función para cambiar modo del formulario
+    function cambiarModoFormulario(editar = false, datos = null) {
+      modoEdicion = editar;
+      
+      if (editar && datos) {
+        document.getElementById('id').value = datos.id;
+        document.getElementById('nombre').value = datos.nombre;
+        document.getElementById('grupo').value = datos.grupo;
+        document.getElementById('motivo').value = datos.motivo;
+        document.getElementById('fecha_ausencia').value = datos.fecha_ausencia;
+        document.getElementById('estado').value = datos.estado;
+        
+        btnText.textContent = 'Actualizar Justificante';
+        submitBtn.querySelector('i').className = 'fas fa-save';
+      } else {
+        form.reset();
+        document.getElementById('id').value = '';
+        
+        btnText.textContent = 'Enviar Justificante';
+        submitBtn.querySelector('i').className = 'fas fa-paper-plane';
+      }
+    }
+
     // Cargar solicitudes desde la API
     async function cargarSolicitudes() {
       try {
         const res = await axios.get(`${API_BASE}/solicitudes`);
+        solicitudes = res.data;
         
-        if (res.data.length === 0) {
+        if (solicitudes.length === 0) {
           tablaBody.innerHTML = `
             <tr>
-              <td colspan="6" class="empty-state">
+              <td colspan="7" class="empty-state">
                 <i class="fas fa-inbox"></i>
                 <p>No hay solicitudes registradas</p>
               </td>
@@ -571,21 +746,100 @@
         }
         
         tablaBody.innerHTML = '';
-        res.data.forEach(s => {
+        solicitudes.forEach(s => {
           const fila = document.createElement('tr');
+          const estadoClass = `status-${s.estado}`;
+          const estadoText = s.estado === 'pendiente' ? 'Pendiente' : 
+                            s.estado === 'aprobado' ? 'Aprobado' : 'Rechazado';
+          
           fila.innerHTML = `
             <td>${s.id}</td>
             <td>${s.nombre}</td>
             <td>${s.grupo}</td>
             <td>${s.motivo}</td>
             <td>${s.fecha_ausencia}</td>
-            <td>${new Date(s.fecha_solicitud).toLocaleString()}</td>
+            <td><span class="status-badge ${estadoClass}">${estadoText}</span></td>
+            <td>
+              <div class="action-buttons">
+                <button class="btn btn-sm btn-warning btn-editar" data-id="${s.id}">
+                  <i class="fas fa-edit"></i> Editar
+                </button>
+                <button class="btn btn-sm btn-danger btn-eliminar" data-id="${s.id}">
+                  <i class="fas fa-trash"></i> Eliminar
+                </button>
+              </div>
+            </td>
           `;
           tablaBody.appendChild(fila);
+        });
+
+        // Agregar event listeners a los botones
+        document.querySelectorAll('.btn-editar').forEach(btn => {
+          btn.addEventListener('click', () => editarSolicitud(btn.dataset.id));
+        });
+
+        document.querySelectorAll('.btn-eliminar').forEach(btn => {
+          btn.addEventListener('click', () => mostrarModalEliminar(btn.dataset.id));
         });
       } catch (err) {
         console.error('Error al cargar solicitudes:', err);
         showNotification('Error al cargar las solicitudes registradas', true);
+      }
+    }
+
+    // Función para crear o actualizar una solicitud
+    async function guardarSolicitud(datos) {
+      try {
+        if (modoEdicion) {
+          // Actualizar solicitud existente
+          const res = await axios.put(`${API_BASE}/solicitudes/${datos.id}`, datos);
+          showNotification(`Solicitud actualizada correctamente.\nID: ${res.data.id}\nEstado: ${res.data.estado}`);
+        } else {
+          // Crear nueva solicitud
+          const res = await axios.post(`${API_BASE}/solicitudes`, datos);
+          showNotification(`Justificante enviado correctamente.\nID: ${res.data.id}\nEstado: ${res.data.estado}`);
+        }
+        
+        form.reset();
+        await cargarSolicitudes();
+        cambiarModoFormulario(false);
+      } catch (err) {
+        console.error('Error al guardar solicitud:', err);
+        showNotification('Error al guardar la solicitud. Verifica tu conexión o intenta más tarde.', true);
+      }
+    }
+
+    // Función para editar una solicitud
+    async function editarSolicitud(id) {
+      try {
+        const solicitud = solicitudes.find(s => s.id == id);
+        if (solicitud) {
+          cambiarModoFormulario(true, solicitud);
+          
+          // Desplazar hacia el formulario
+          document.querySelector('.card').scrollIntoView({ behavior: 'smooth' });
+        }
+      } catch (err) {
+        console.error('Error al cargar solicitud para editar:', err);
+        showNotification('Error al cargar la solicitud para editar', true);
+      }
+    }
+
+    // Función para mostrar modal de eliminación
+    function mostrarModalEliminar(id) {
+      solicitudAEliminar = id;
+      deleteModal.classList.add('show');
+    }
+
+    // Función para eliminar una solicitud
+    async function eliminarSolicitud(id) {
+      try {
+        await axios.delete(`${API_BASE}/solicitudes/${id}`);
+        showNotification('Solicitud eliminada correctamente');
+        await cargarSolicitudes();
+      } catch (err) {
+        console.error('Error al eliminar solicitud:', err);
+        showNotification('Error al eliminar la solicitud. Verifica tu conexión o intenta más tarde.', true);
       }
     }
 
@@ -595,17 +849,31 @@
       setButtonState(true);
       
       const datos = Object.fromEntries(new FormData(form));
-      
-      try {
-        const res = await axios.post(`${API_BASE}/solicitudes`, datos);
-        showNotification(`Justificante enviado correctamente.\nID: ${res.data.id}\nEstado: Pendiente de revisión`);
-        form.reset();
-        await cargarSolicitudes();
-      } catch (err) {
-        console.error('Error al enviar solicitud:', err);
-        showNotification('Error al enviar la solicitud. Verifica tu conexión o intenta más tarde.', true);
-      } finally {
-        setButtonState(false);
+      await guardarSolicitud(datos);
+      setButtonState(false);
+    });
+
+    // Event listeners para el modal de eliminación
+    closeDeleteModal.addEventListener('click', () => {
+      deleteModal.classList.remove('show');
+    });
+
+    cancelDelete.addEventListener('click', () => {
+      deleteModal.classList.remove('show');
+    });
+
+    confirmDelete.addEventListener('click', () => {
+      if (solicitudAEliminar) {
+        eliminarSolicitud(solicitudAEliminar);
+        deleteModal.classList.remove('show');
+        solicitudAEliminar = null;
+      }
+    });
+
+    // Cerrar modal al hacer clic fuera del contenido
+    deleteModal.addEventListener('click', (e) => {
+      if (e.target === deleteModal) {
+        deleteModal.classList.remove('show');
       }
     });
 
