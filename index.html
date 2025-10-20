@@ -7,16 +7,13 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-  <style>
+ <style>
     :root {
-      --primary: #4361ee;
-      --primary-light: #4895ef;
-      --secondary: #3f37c9;
-      --success: #4cc9f0;
-      --warning: #f8961e;
-      --danger: #e63946;
-      --dark: #2b2d42;
-      --light: #f8f9fa;
+      --primary: #03A63C;
+      --primary-light: #038C33;
+      --secondary: #73BF8E;
+      --dark: #595958;
+      --light: #F2F2F2;
       --gray: #adb5bd;
       --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
       --radius: 12px;
@@ -31,7 +28,7 @@
 
     body {
       font-family: 'Poppins', sans-serif;
-      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      background: linear-gradient(135deg, #F2F2F2 0%, #e0e0e0 100%);
       color: var(--dark);
       line-height: 1.6;
       min-height: 100vh;
@@ -148,7 +145,7 @@
       outline: none;
       border-color: var(--primary-light);
       background-color: white;
-      box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
+      box-shadow: 0 0 0 3px rgba(3, 166, 60, 0.15);
     }
 
     textarea {
@@ -171,13 +168,13 @@
       font-weight: 500;
       cursor: pointer;
       transition: var(--transition);
-      box-shadow: 0 4px 15px rgba(67, 97, 238, 0.3);
+      box-shadow: 0 4px 15px rgba(3, 166, 60, 0.3);
     }
 
     .btn:hover {
-      background: var(--secondary);
+      background: var(--primary-light);
       transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(67, 97, 238, 0.4);
+      box-shadow: 0 6px 20px rgba(3, 166, 60, 0.4);
     }
 
     .btn:active {
@@ -196,16 +193,16 @@
     }
 
     .btn-success {
-      background: var(--success);
-      box-shadow: 0 4px 15px rgba(76, 201, 240, 0.3);
+      background: var(--secondary);
+      box-shadow: 0 4px 15px rgba(115, 191, 142, 0.3);
     }
 
     .btn-success:hover {
-      background: #3a9fc9;
+      background: #5da87a;
     }
 
     .btn-warning {
-      background: var(--warning);
+      background: #f8961e;
       box-shadow: 0 4px 15px rgba(248, 150, 30, 0.3);
     }
 
@@ -214,7 +211,7 @@
     }
 
     .btn-danger {
-      background: var(--danger);
+      background: #e63946;
       box-shadow: 0 4px 15px rgba(230, 57, 70, 0.3);
     }
 
@@ -257,7 +254,7 @@
     }
 
     .result-title i {
-      color: var(--success);
+      color: var(--secondary);
     }
 
     #resultado {
@@ -267,12 +264,12 @@
       font-family: 'Courier New', monospace;
       font-size: 0.9rem;
       white-space: pre-wrap;
-      border-left: 4px solid var(--success);
+      border-left: 4px solid var(--secondary);
       animation: fadeIn 0.5s ease;
     }
 
     .result-error {
-      border-left-color: var(--danger);
+      border-left-color: #e63946;
     }
 
     .table-container {
@@ -727,88 +724,118 @@
       }
     }
 
-    // Cargar solicitudes desde la API
-    async function cargarSolicitudes() {
-      try {
-        const res = await axios.get(`${API_BASE}/solicitudes`);
-        solicitudes = res.data;
-        
-        if (solicitudes.length === 0) {
-          tablaBody.innerHTML = `
-            <tr>
-              <td colspan="7" class="empty-state">
-                <i class="fas fa-inbox"></i>
-                <p>No hay solicitudes registradas</p>
-              </td>
-            </tr>
-          `;
-          return;
-        }
-        
-        tablaBody.innerHTML = '';
-        solicitudes.forEach(s => {
-          const fila = document.createElement('tr');
-          const estadoClass = `status-${s.estado}`;
-          const estadoText = s.estado === 'pendiente' ? 'Pendiente' : 
-                            s.estado === 'aprobado' ? 'Aprobado' : 'Rechazado';
-          
-          fila.innerHTML = `
-            <td>${s.id}</td>
-            <td>${s.nombre}</td>
-            <td>${s.grupo}</td>
-            <td>${s.motivo}</td>
-            <td>${s.fecha_ausencia}</td>
-            <td><span class="status-badge ${estadoClass}">${estadoText}</span></td>
-            <td>
-              <div class="action-buttons">
-                <button class="btn btn-sm btn-warning btn-editar" data-id="${s.id}">
-                  <i class="fas fa-edit"></i> Editar
-                </button>
-                <button class="btn btn-sm btn-danger btn-eliminar" data-id="${s.id}">
-                  <i class="fas fa-trash"></i> Eliminar
-                </button>
-              </div>
-            </td>
-          `;
-          tablaBody.appendChild(fila);
-        });
-
-        // Agregar event listeners a los botones
-        document.querySelectorAll('.btn-editar').forEach(btn => {
-          btn.addEventListener('click', () => editarSolicitud(btn.dataset.id));
-        });
-
-        document.querySelectorAll('.btn-eliminar').forEach(btn => {
-          btn.addEventListener('click', () => mostrarModalEliminar(btn.dataset.id));
-        });
-      } catch (err) {
-        console.error('Error al cargar solicitudes:', err);
-        showNotification('Error al cargar las solicitudes registradas', true);
-      }
+// Cargar solicitudes desde la API - VERSIÓN CORREGIDA
+async function cargarSolicitudes() {
+  try {
+    const res = await axios.get(`${API_BASE}/solicitudes`);
+    console.log('Respuesta del servidor:', res.data); // Para debug
+    
+    // Asegúrate de que estamos usando el array correcto
+    solicitudes = Array.isArray(res.data) ? res.data : [];
+    
+    if (solicitudes.length === 0) {
+      tablaBody.innerHTML = `
+        <tr>
+          <td colspan="7" class="empty-state">
+            <i class="fas fa-inbox"></i>
+            <p>No hay solicitudes registradas</p>
+          </td>
+        </tr>
+      `;
+      return;
     }
+    
+    tablaBody.innerHTML = '';
+    solicitudes.forEach(s => {
+      const fila = document.createElement('tr');
+      const estadoClass = `status-${s.estado}`;
+      const estadoText = s.estado === 'pendiente' ? 'Pendiente' : 
+                        s.estado === 'aprobado' ? 'Aprobado' : 'Rechazado';
+      
+      fila.innerHTML = `
+        <td>${s.id}</td>
+        <td>${s.nombre}</td>
+        <td>${s.grupo}</td>
+        <td>${s.motivo}</td>
+        <td>${s.fecha_ausencia}</td>
+        <td><span class="status-badge ${estadoClass}">${estadoText}</span></td>
+        <td>
+          <div class="action-buttons">
+            <button class="btn btn-sm btn-warning btn-editar" data-id="${s.id}">
+              <i class="fas fa-edit"></i> Editar
+            </button>
+            <button class="btn btn-sm btn-danger btn-eliminar" data-id="${s.id}">
+              <i class="fas fa-trash"></i> Eliminar
+            </button>
+          </div>
+        </td>
+      `;
+      tablaBody.appendChild(fila);
+    });
 
-    // Función para crear o actualizar una solicitud
-    async function guardarSolicitud(datos) {
-      try {
-        if (modoEdicion) {
-          // Actualizar solicitud existente
-          const res = await axios.put(`${API_BASE}/solicitudes/${datos.id}`, datos);
-          showNotification(`Solicitud actualizada correctamente.\nID: ${res.data.id}\nEstado: ${res.data.estado}`);
-        } else {
-          // Crear nueva solicitud
-          const res = await axios.post(`${API_BASE}/solicitudes`, datos);
-          showNotification(`Justificante enviado correctamente.\nID: ${res.data.id}\nEstado: ${res.data.estado}`);
-        }
-        
-        form.reset();
-        await cargarSolicitudes();
-        cambiarModoFormulario(false);
-      } catch (err) {
-        console.error('Error al guardar solicitud:', err);
-        showNotification('Error al guardar la solicitud. Verifica tu conexión o intenta más tarde.', true);
-      }
+    // Agregar event listeners a los botones
+    document.querySelectorAll('.btn-editar').forEach(btn => {
+      btn.addEventListener('click', () => editarSolicitud(btn.dataset.id));
+    });
+
+    document.querySelectorAll('.btn-eliminar').forEach(btn => {
+      btn.addEventListener('click', () => mostrarModalEliminar(btn.dataset.id));
+    });
+  } catch (err) {
+    console.error('Error al cargar solicitudes:', err);
+    showNotification('Error al cargar las solicitudes registradas', true);
+  }
+}
+// Función temporal para ver qué está devolviendo el servidor
+async function debugSolicitudes() {
+  try {
+    const res = await axios.get(`${API_BASE}/solicitudes`);
+    console.log('DEBUG - Respuesta completa:', res);
+    console.log('DEBUG - Datos recibidos:', res.data);
+    console.log('DEBUG - Tipo de datos:', typeof res.data);
+    console.log('DEBUG - Es array?:', Array.isArray(res.data));
+    
+    if (Array.isArray(res.data)) {
+      console.log('DEBUG - Primer elemento:', res.data[0]);
     }
+  } catch (error) {
+    console.error('DEBUG - Error:', error);
+  }
+}
 
+// Llama a esta función después de cargarSolicitudes()
+// Función para crear o actualizar una solicitud - VERSIÓN CORREGIDA
+async function guardarSolicitud(datos) {
+  try {
+    let res;
+    
+    if (modoEdicion) {
+      // Actualizar solicitud existente
+      res = await axios.put(`${API_BASE}/solicitudes/${datos.id}`, datos);
+      showNotification(`Solicitud actualizada correctamente.\nID: ${res.data.id}\nEstado: ${res.data.estado}`);
+    } else {
+      // Crear nueva solicitud - asegurar el formato correcto
+      const datosEnvio = {
+        nombre: datos.nombre,
+        grupo: datos.grupo,
+        motivo: datos.motivo,
+        fecha_ausencia: datos.fecha_ausencia,
+        estado: datos.estado || 'pendiente' // Valor por defecto
+      };
+      
+      res = await axios.post(`${API_BASE}/solicitudes`, datosEnvio);
+      showNotification(`Justificante enviado correctamente.\nID: ${res.data.id}\nEstado: ${res.data.estado}`);
+    }
+    
+    form.reset();
+    await cargarSolicitudes();
+    cambiarModoFormulario(false);
+  } catch (err) {
+    console.error('Error al guardar solicitud:', err);
+    console.error('Detalles del error:', err.response?.data);
+    showNotification('Error al guardar la solicitud. Verifica tu conexión o intenta más tarde.', true);
+  }
+}
     // Función para editar una solicitud
     async function editarSolicitud(id) {
       try {
