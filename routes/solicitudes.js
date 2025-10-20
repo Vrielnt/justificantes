@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db/connection');
 
-
 // POST /solicitudes → Registrar solicitud
 router.post('/', (req, res) => {
   const { nombre, grupo, motivo, fecha_ausencia } = req.body;

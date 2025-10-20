@@ -6,6 +6,7 @@
   <title>Sistema de Justificantes</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <style>
     :root {
       --primary: #4361ee;
@@ -185,6 +186,13 @@
       width: 100%;
     }
 
+    .btn:disabled {
+      background: var(--gray);
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
     .result-card {
       background: white;
       border-radius: var(--radius);
@@ -192,6 +200,11 @@
       padding: 25px;
       margin-top: 30px;
       animation: fadeIn 0.8s ease;
+      display: none;
+    }
+
+    .result-card.show {
+      display: block;
     }
 
     .result-title {
@@ -217,6 +230,10 @@
       white-space: pre-wrap;
       border-left: 4px solid var(--success);
       animation: fadeIn 0.5s ease;
+    }
+
+    .result-error {
+      border-left-color: #e63946;
     }
 
     .table-container {
@@ -269,6 +286,7 @@
 
     tbody tr:hover {
       background: #e9ecef;
+      transform: scale(1.01);
     }
 
     td {
@@ -304,6 +322,20 @@
     .status-approved {
       background: #d1edff;
       color: var(--primary);
+    }
+
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255,255,255,.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 1s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
     }
 
     footer {
@@ -418,17 +450,18 @@
             </div>
           </div>
           
-          <button type="submit" class="btn btn-full">
+          <button type="submit" class="btn btn-full" id="submit-btn">
             <i class="fas fa-paper-plane"></i>
-            Enviar Justificante
+            <span id="btn-text">Enviar Justificante</span>
+            <div class="loading" id="btn-loading" style="display: none;"></div>
           </button>
         </form>
       </section>
 
-      <section class="result-card">
+      <section class="result-card" id="result-card">
         <h3 class="result-title">
-          <i class="fas fa-check-circle"></i>
-          Resultado:
+          <i class="fas fa-check-circle" id="result-icon"></i>
+          <span id="result-title-text">Resultado:</span>
         </h3>
         <pre id="resultado">Aquí se mostrará el resultado de la operación...</pre>
       </section>
@@ -448,36 +481,14 @@
                 <th>Motivo</th>
                 <th>Fecha de Ausencia</th>
                 <th>Fecha de Solicitud</th>
-                <th>Estado</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody id="tabla-body">
               <tr>
-                <td>001</td>
-                <td>María González</td>
-                <td>3B</td>
-                <td>Consulta médica programada</td>
-                <td>15/05/2023</td>
-                <td>10/05/2023 14:30</td>
-                <td><span class="status-badge status-approved">Aprobado</span></td>
-              </tr>
-              <tr>
-                <td>002</td>
-                <td>Carlos Rodríguez</td>
-                <td>4A</td>
-                <td>Problemas familiares</td>
-                <td>20/05/2023</td>
-                <td>18/05/2023 09:15</td>
-                <td><span class="status-badge status-pending">Pendiente</span></td>
-              </tr>
-              <tr>
-                <td>003</td>
-                <td>Ana López</td>
-                <td>2C</td>
-                <td>Participación en evento deportivo</td>
-                <td>22/05/2023</td>
-                <td>19/05/2023 16:45</td>
-                <td><span class="status-badge status-approved">Aprobado</span></td>
+                <td colspan="6" class="empty-state">
+                  <i class="fas fa-inbox"></i>
+                  <p>No hay solicitudes registradas</p>
+                </td>
               </tr>
             </tbody>
           </table>
@@ -491,74 +502,121 @@
   </div>
 
   <script>
-    // Animación para el formulario
-    document.getElementById('form').addEventListener('submit', function(e) {
+    // Elementos del DOM
+    const form = document.getElementById('form');
+    const resultado = document.getElementById('resultado');
+    const tablaBody = document.getElementById('tabla-body');
+    const resultCard = document.getElementById('result-card');
+    const resultIcon = document.getElementById('result-icon');
+    const resultTitleText = document.getElementById('result-title-text');
+    const submitBtn = document.getElementById('submit-btn');
+    const btnText = document.getElementById('btn-text');
+    const btnLoading = document.getElementById('btn-loading');
+
+    // URL base de la API - cambiar según sea necesario
+    const API_BASE = 'http://localhost:3000';
+
+    // Función para mostrar notificación
+    function showNotification(message, isError = false) {
+      resultCard.classList.add('show');
+      
+      if (isError) {
+        resultIcon.className = 'fas fa-exclamation-circle';
+        resultIcon.style.color = '#e63946';
+        resultTitleText.textContent = 'Error:';
+        resultado.className = 'result-error';
+      } else {
+        resultIcon.className = 'fas fa-check-circle';
+        resultIcon.style.color = '#4cc9f0';
+        resultTitleText.textContent = 'Éxito:';
+        resultado.className = '';
+      }
+      
+      resultado.textContent = message;
+      
+      // Animación
+      resultCard.style.animation = 'none';
+      resultCard.offsetHeight;
+      resultCard.style.animation = 'pulse 0.5s ease';
+    }
+
+    // Función para cambiar estado del botón
+    function setButtonState(loading) {
+      if (loading) {
+        submitBtn.disabled = true;
+        btnText.style.display = 'none';
+        btnLoading.style.display = 'block';
+      } else {
+        submitBtn.disabled = false;
+        btnText.style.display = 'block';
+        btnLoading.style.display = 'none';
+      }
+    }
+
+    // Cargar solicitudes desde la API
+    async function cargarSolicitudes() {
+      try {
+        const res = await axios.get(`${API_BASE}/solicitudes`);
+        
+        if (res.data.length === 0) {
+          tablaBody.innerHTML = `
+            <tr>
+              <td colspan="6" class="empty-state">
+                <i class="fas fa-inbox"></i>
+                <p>No hay solicitudes registradas</p>
+              </td>
+            </tr>
+          `;
+          return;
+        }
+        
+        tablaBody.innerHTML = '';
+        res.data.forEach(s => {
+          const fila = document.createElement('tr');
+          fila.innerHTML = `
+            <td>${s.id}</td>
+            <td>${s.nombre}</td>
+            <td>${s.grupo}</td>
+            <td>${s.motivo}</td>
+            <td>${s.fecha_ausencia}</td>
+            <td>${new Date(s.fecha_solicitud).toLocaleString()}</td>
+          `;
+          tablaBody.appendChild(fila);
+        });
+      } catch (err) {
+        console.error('Error al cargar solicitudes:', err);
+        showNotification('Error al cargar las solicitudes registradas', true);
+      }
+    }
+
+    // Manejar envío del formulario
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
+      setButtonState(true);
       
-      // Simulación de envío exitoso
-      const resultado = document.getElementById('resultado');
-      resultado.textContent = "Justificante enviado correctamente.\nID: 004\nEstado: Pendiente de revisión";
-      resultado.style.animation = 'none';
-      resultado.offsetHeight; // Trigger reflow
-      resultado.style.animation = 'pulse 0.5s ease';
+      const datos = Object.fromEntries(new FormData(form));
       
-      // Reset del formulario
-      this.reset();
+      try {
+        const res = await axios.post(`${API_BASE}/solicitudes`, datos);
+        showNotification(`Justificante enviado correctamente.\nID: ${res.data.id}\nEstado: Pendiente de revisión`);
+        form.reset();
+        await cargarSolicitudes();
+      } catch (err) {
+        console.error('Error al enviar solicitud:', err);
+        showNotification('Error al enviar la solicitud. Verifica tu conexión o intenta más tarde.', true);
+      } finally {
+        setButtonState(false);
+      }
     });
 
-    // Efecto hover en las filas de la tabla
-    document.querySelectorAll('#tabla tbody tr').forEach(row => {
-      row.addEventListener('mouseenter', function() {
-        this.style.transform = 'scale(1.01)';
-      });
+    // Inicializar la aplicación
+    document.addEventListener('DOMContentLoaded', () => {
+      cargarSolicitudes();
       
-      row.addEventListener('mouseleave', function() {
-        this.style.transform = 'scale(1)';
-      });
+      // Establecer fecha mínima como hoy
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('fecha_ausencia').min = today;
     });
   </script>
-  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-<script>
-  const form = document.getElementById('form');
-  const resultado = document.getElementById('resultado');
-  const tablaBody = document.querySelector('#tabla tbody');
-
-  async function cargarSolicitudes() {
-    tablaBody.innerHTML = '';
-    try {
-      const res = await axios.get('http://localhost:3000/solicitudes');
-      res.data.forEach(s => {
-        const fila = document.createElement('tr');
-        fila.innerHTML = `
-          <td>${s.id}</td>
-          <td>${s.nombre}</td>
-          <td>${s.grupo}</td>
-          <td>${s.motivo}</td>
-          <td>${s.fecha_ausencia}</td>
-          <td>${new Date(s.fecha_solicitud).toLocaleString()}</td>
-        `;
-        tablaBody.appendChild(fila);
-      });
-    } catch (err) {
-      resultado.textContent = 'Error al cargar solicitudes';
-    }
-  }
-
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const datos = Object.fromEntries(new FormData(form));
-    try {
-      const res = await axios.post('http://localhost:3000/solicitudes', datos);
-      resultado.textContent = JSON.stringify(res.data, null, 2);
-      form.reset();
-      await cargarSolicitudes();
-    } catch (err) {
-      resultado.textContent = 'Error al enviar solicitud';
-    }
-  });
-
-  cargarSolicitudes();
-</script>
-
 </body>
 </html>

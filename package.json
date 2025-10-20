@@ -14,7 +14,7 @@
     "body-parser": "^1.20.2",
     "cors": "^2.8.5",
     "express": "^4.21.2",
-    "mysql2": "^3.15.1"
+    "mysql2": "^3.15.2"
   },
   "repository": {
     "type": "git",
@@ -24,5 +24,8 @@
   "bugs": {
     "url": "https://github.com/Vrielnt/justificantes/issues"
   },
-  "homepage": "https://github.com/Vrielnt/justificantes#readme"
+  "homepage": "https://github.com/Vrielnt/justificantes#readme",
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
 }
